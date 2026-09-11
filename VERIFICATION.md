@@ -7,7 +7,7 @@ Verified locally on 11 September 2026 with Python 3.14, Django 5.2.17, SQLite an
 | Initial migrations | Applied successfully |
 | `python manage.py check` | No issues |
 | `python manage.py makemigrations --check --dry-run` | No changes detected |
-| `python manage.py test` | 36 tests passed |
+| `python manage.py test` | 38 tests passed, including clone setup tests |
 | `npm run build:css` | Tailwind compiled successfully |
 | Repeated `seed_demo` | No duplicates, existing stock preserved |
 | Browser page/viewport checks | 64 passed at 375, 390, 768 and 1280 px |
@@ -48,3 +48,18 @@ Machine-readable reports and reviewed screenshots:
 The initial browser driver attempt raced form completion and its date typing depended on browser locale. The verification script now waits for form navigation and sets date inputs using ISO format. The affected workflows were resumed and passed. These were verification-driver fixes; Django's submitted date validation and password behavior are covered by the integration tests.
 
 Product visuals are original generated placeholders, not product photography. Password reset was tested with Django's test email backend; the local demo uses console email. Real SMTP, PostgreSQL, production hosting and real payments were not exercised.
+
+## Repository setup verification
+
+The committed source was cloned into a separate directory with no virtual environment, local settings, database or product media. On Windows / Python 3.14:
+
+- `python setup_demo.py` created its own `.venv` and installed the pinned dependencies.
+- Migrations, 20 product images, 20 products, 8 categories and 2 usable accounts were created successfully.
+- Fresh Admin and Customer passwords were checked against Django's password hashes. The Admin could open the custom Dashboard.
+- Home, Shop, Product Detail and Cart rendered successfully in that clone.
+- Running `python setup_demo.py` again preserved the exact `.env`, account access file, password hashes and record counts.
+- All 38 tests passed in the clone; no model migration changes remained.
+- The clone's Git worktree stayed clean after setup. Local credentials, database, generated media and virtual environment remained ignored.
+- The 97 tracked files were checked against the original machine's actual secret key and account passwords; none were included.
+
+The browser screenshots and cancelled order described above belong to the original local verification session. A fresh clone starts with zero orders; reports under `artifacts/` and machine-local credentials are not published.
