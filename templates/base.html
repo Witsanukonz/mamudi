@@ -1,0 +1,42 @@
+{% load static store_tags %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MAMUDI. Modern essentials for everyday life. Explore minimal clothing and considered accessories.">
+  <title>{% block title %}MAMUDI | Modern essentials{% endblock %}</title>
+  <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+  <script src="{% static 'js/site.js' %}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{% include 'includes/icons.html' %}
+{% block shell %}
+<div class="announcement">THE EVERYDAY COLLECTION <span>Thoughtfully simple. Unmistakably you.</span><span class="announcement-right">THAILAND · THB ฿</span></div>
+<header class="site-header">
+  <a href="{% url 'home' %}" class="wordmark" aria-label="MAMUDI home">MAMUDI<span>®</span></a>
+  <nav class="desktop-nav" aria-label="Main navigation">
+    <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>Home</a>
+    <a href="{% url 'product_list' %}" {% if request.resolver_match.url_name == 'product_list' %}aria-current="page"{% endif %}>Shop</a>
+    <a href="{% url 'home' %}#categories">Categories</a>
+  </nav>
+  <div class="header-actions">
+    <a class="icon-button" href="{% url 'product_list' %}#search" aria-label="Search products"><svg><use href="#i-search"/></svg></a>
+    {% if user.is_authenticated %}
+    <details class="account-menu"><summary class="icon-button" aria-label="Account menu"><svg><use href="#i-user"/></svg></summary><div class="dropdown-panel"><strong>{{ user.first_name|default:user.username }}</strong><a href="{% url 'profile' %}">My profile</a><a href="{% url 'order_list' %}">My orders</a>{% if user.is_store_admin %}<a href="{% url 'dashboard' %}">Dashboard</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>Logout</button></form></div></details>
+    {% else %}<a class="icon-button" href="{% url 'login' %}" aria-label="Login"><svg><use href="#i-user"/></svg></a><a class="auth-register" href="{% url 'register' %}">Register</a>{% endif %}
+    <a class="bag-link" href="{% url 'cart' %}" aria-label="Shopping bag, {{ cart_count }} items"><svg><use href="#i-bag"/></svg><span class="bag-label">Bag</span><span class="bag-count">{{ cart_count }}</span></a>
+    <button type="button" class="icon-button mobile-menu-toggle" data-menu-toggle aria-expanded="false" aria-controls="mobile-menu" aria-label="Open navigation"><svg><use href="#i-menu"/></svg></button>
+  </div>
+</header>
+<nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
+  <a href="{% url 'home' %}">Home</a><a href="{% url 'product_list' %}">Shop all</a><a href="{% url 'home' %}#categories">Categories</a>
+  {% if user.is_authenticated %}<a href="{% url 'profile' %}">Profile</a><a href="{% url 'order_list' %}">My orders</a>{% if user.is_store_admin %}<a href="{% url 'dashboard' %}">Dashboard</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>Logout</button></form>{% else %}<a href="{% url 'login' %}">Login</a><a href="{% url 'register' %}">Register</a>{% endif %}
+</nav>
+{% include 'includes/messages.html' %}
+<main id="main">{% block content %}{% endblock %}</main>
+<footer class="site-footer"><div class="footer-top"><div><a href="{% url 'home' %}" class="wordmark">MAMUDI<span>®</span></a><p>Less, but better.<br>Essentials for the way you live.</p></div><div><h3>EXPLORE</h3><a href="{% url 'product_list' %}">All clothing</a><a href="{% url 'product_list' %}?sort=newest">New arrivals</a><a href="{% url 'home' %}#categories">Our categories</a></div><div><h3>YOUR MAMUDI</h3><a href="{% url 'profile' %}">My account</a><a href="{% url 'order_list' %}">My orders</a><a href="{% url 'cart' %}">Shopping bag</a></div><div class="footer-note"><span class="eyebrow">MADE FOR EVERY DAY</span><p>Simple shapes.<br>Endless possibilities.</p></div></div><div class="footer-bottom"><span>© {% now 'Y' %} MAMUDI</span><span>Course project · Demo store · No real payments</span><span>THAILAND / THB ฿</span></div></footer>
+{% endblock %}
+</body></html>

@@ -1,0 +1,8 @@
+{% load store_tags %}
+<article class="product-card">
+  <a class="product-image" href="{{ product.get_absolute_url }}"><img src="{{ product.image_url }}" alt="{{ product.color }} {{ product.short_name }}" loading="lazy" width="600" height="750">{% if product.stock == 0 %}<span class="product-badge">SOLD OUT</span>{% elif product.stock <= 5 %}<span class="product-badge">LAST FEW</span>{% endif %}<span class="image-view">View product <svg><use href="#i-arrow"/></svg></span></a>
+  <div class="product-meta"><span>{{ product.category.name }}</span><span>{{ product.color }}</span></div>
+  <div class="product-title-row"><h3><a href="{{ product.get_absolute_url }}">{{ product.short_name }}</a></h3><span class="product-price">฿{{ product.price|money }}</span></div>
+  <div class="product-card-bottom"><span>{{ product.stock }} in stock</span><form method="post" action="{% url 'cart_add' product.pk %}">{% csrf_token %}<input type="hidden" name="quantity" value="1"><label class="sr-only" for="size-{{ section }}-{{ product.pk }}">Size for {{ product.short_name }}</label><select id="size-{{ section }}-{{ product.pk }}" name="size" aria-label="Size for {{ product.short_name }}">{% for size in product.sizes %}<option>{{ size }}</option>{% empty %}<option>One size</option>{% endfor %}</select><button class="text-button" {% if not product.stock %}disabled{% endif %}>Add to bag <span>+</span></button></form></div>
+</article>
+
