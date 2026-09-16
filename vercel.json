@@ -1,5 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "uv run python manage.py migrate --noinput && uv run python manage.py seed_demo && uv run python manage.py create_store_admin --noinput && uv run python manage.py collectstatic --noinput",
   "regions": ["sin1"]
 }
