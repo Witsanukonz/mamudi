@@ -39,6 +39,20 @@ python setup_demo.py
 
 > GitHub เก็บซอร์สโค้ดของโปรเจกต์ หลัง clone ต้องรัน Django ตามด้านบนจึงจะเปิดเว็บได้
 
+## เว็บออนไลน์บน Vercel
+
+- หน้าร้าน Production: <https://mamudi.vercel.app/>
+- Admin Dashboard: <https://mamudi.vercel.app/dashboard/>
+- Source code: <https://github.com/Witsanukonz/mamudi>
+
+Production ใช้ Django บน Vercel, Neon PostgreSQL สำหรับบัญชี/สินค้า/ออเดอร์ และ Vercel Blob สำหรับรูปที่อัปโหลดผ่าน Dashboard ข้อมูลจึงไม่ผูกกับไฟล์ SQLite หรือ filesystem ชั่วคราวของ serverless ส่วน local หลัง clone ยังใช้ SQLite และ `media/` ตามขั้นตอนปกติ
+
+รหัส Production อยู่ใน `VERCEL_ACCESS.md` เฉพาะเครื่องที่ deploy และไฟล์นี้ถูก `.gitignore` ไว้ ไม่ถูกส่งขึ้น GitHub เมื่อต้องการอัปเดตเว็บหลังแก้โค้ดและทดสอบแล้ว ให้ push GitHub และรันจากโฟลเดอร์โปรเจกต์ที่ link กับ Vercel:
+
+```powershell
+npx vercel@59.19.0 --prod
+```
+
 ## ติดตั้งเองทีละขั้นตอน (ทางเลือก)
 
 หลัง clone และ `cd mamudi` แล้ว ถ้าต้องการกำหนดบัญชีหรือค่า `.env` เอง:
@@ -212,12 +226,6 @@ setup_demo.py  ติดตั้ง Demo ครบในคำสั่งเ�
 
 ## PostgreSQL และการนำขึ้นเซิร์ฟเวอร์
 
-Local ใช้ SQLite เปลี่ยนเป็น PostgreSQL ด้วย:
+Local ใช้ SQLite โดยอัตโนมัติ ส่วน Production ใช้ `DATABASE_URL` จาก Neon และมี PostgreSQL driver ใน `requirements.txt` แล้ว การเปลี่ยน URL **ไม่ย้ายข้อมูล SQLite ให้อัตโนมัติ** ต้องรัน `python manage.py migrate`, `seed_demo` และ `create_store_admin --noinput` กับฐานข้อมูลปลายทาง
 
-```powershell
-pip install "psycopg[binary]"
-```
-
-ตั้ง `DATABASE_URL=postgresql://user:password@localhost:5432/mamudi` แล้วรัน migrations บนฐานข้อมูลนั้น การเปลี่ยน URL **ไม่ย้ายข้อมูล SQLite ให้อัตโนมัติ**
-
-สำหรับ deployment ต้องกำหนด `DEBUG=False`, `SECRET_KEY`, `ALLOWED_HOSTS` ให้เหมาะสม ใช้ HTTPS, WSGI server และระบบเสิร์ฟ static/media (`python manage.py collectstatic`) ปัจจุบันตรวจยืนยันเฉพาะ local SQLite Demo
+Vercel อ่าน `DJANGO_SECRET_KEY`, `DATABASE_URL` และ `BLOB_READ_WRITE_TOKEN` จาก Environment Variables โดยไม่เก็บค่าเหล่านี้ใน Git ตัวโปรเจกต์เลือก Django framework และ region สิงคโปร์ผ่าน `vercel.json` พร้อมล็อก Python ใน `pyproject.toml`/`.python-version`
