@@ -1,6 +1,14 @@
 {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-{% for field in form %}{% if field.is_hidden %}{{ field }}{% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}{% else %}<div class="form-field {% if field.name == 'description' or field.name == 'address' or field.name == 'sizes' or field.name == 'gender' or field.name == 'image' %}full-width{% endif %}">
-  {% if field.name == 'is_active' %}<label class="checkbox-label">{{ field }} <span>{{ field.label }}</span></label>{% else %}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required"> *</span>{% endif %}</label>{{ field }}{% endif %}
-  {% if field.help_text %}<div class="help-text">{{ field.help_text|safe }}</div>{% endif %}{% if field.errors %}<div class="field-error" role="alert">{{ field.errors }}</div>{% endif %}
-  {% if field.name == 'image' %}<div class="image-preview"><img data-image-preview src="{{ object.image_url|default:'/static/images/product-placeholder.svg' }}" alt="Product image preview"><span>Preview · JPEG, PNG or WebP · Max 5 MB</span></div>{% endif %}
-</div>{% endif %}{% endfor %}
+{% for field in form %}
+  {% if field.is_hidden %}
+    {{ field }}{% if field.errors %}<div class="field-error">{{ field.errors }}</div>{% endif %}
+  {% elif field.name == 'image_count' %}
+    {% include 'dashboard/product_image_fields.html' %}
+  {% elif field.name == 'image_1' or field.name == 'image_2' or field.name == 'image_3' or field.name == 'image_4' or field.name == 'image_5' %}
+  {% else %}
+    <div class="form-field {% if field.name == 'description' or field.name == 'address' or field.name == 'sizes' or field.name == 'gender' %}full-width{% endif %}">
+      {% if field.name == 'is_active' %}<label class="checkbox-label">{{ field }} <span>{{ field.label }}</span></label>{% else %}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required"> *</span>{% endif %}</label>{{ field }}{% endif %}
+      {% if field.help_text %}<div class="help-text">{{ field.help_text|safe }}</div>{% endif %}{% if field.errors %}<div class="field-error" role="alert">{{ field.errors }}</div>{% endif %}
+    </div>
+  {% endif %}
+{% endfor %}

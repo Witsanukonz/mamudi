@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.templatetags.static import static
 from django.urls import reverse
@@ -62,9 +62,37 @@ class Product(models.Model):
         return self.image.url
 
     @property
+    def gallery_image_urls(self):
+        urls = [self.image_url]
+        for product_image in self.additional_images.all():
+            if product_image.image:
+                urls.append(product_image.image.url)
+        return urls
+
+    @property
+    def image_count(self):
+        return (1 if self.image else 0) + self.additional_images.count()
+
+    @property
     def short_name(self):
         return self.name.removeprefix('MAMUDI ')
 
     @property
     def default_size(self):
         return self.sizes[0] if self.sizes else 'One size'
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='additional_images')
+    image = models.ImageField(upload_to='products/', max_length=500)
+    position = models.PositiveSmallIntegerField(validators=[MinValueValidator(2), MaxValueValidator(5)])
+
+    class Meta:
+        ordering = ['position']
+        constraints = [
+            models.UniqueConstraint(fields=['product', 'position'], name='unique_product_image_position'),
+            models.CheckConstraint(condition=models.Q(position__gte=2, position__lte=5), name='product_image_position_2_to_5'),
+        ]
+
+    def __str__(self):
+        return f'{self.product.name} image {self.position}'

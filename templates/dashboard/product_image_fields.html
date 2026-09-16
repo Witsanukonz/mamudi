@@ -1,0 +1,31 @@
+<section class="product-images-field full-width" data-product-images>
+  <div class="form-field image-count-field">
+    <label for="{{ field.id_for_label }}">{{ field.label }}<span class="required"> *</span></label>
+    {{ field }}
+    {% if field.help_text %}<div class="help-text">{{ field.help_text }}</div>{% endif %}
+    {% if field.errors %}<div class="field-error" role="alert">{{ field.errors }}</div>{% endif %}
+  </div>
+  <div class="product-image-slots">
+    {% for slot in form.image_slots %}
+      <div class="product-image-slot" data-image-slot-container="{{ slot.position }}">
+        <div class="image-slot-heading"><strong>{{ slot.field.label }}</strong><span>4:5 ratio</span></div>
+        <div class="image-slot-preview">
+          <img data-image-preview="{{ slot.position }}" src="{% if slot.url %}{{ slot.url }}{% else %}/static/images/product-placeholder.svg{% endif %}" alt="Preview for product image {{ slot.position }}">
+        </div>
+        {{ slot.field }}
+        <button type="button" class="button button-outline image-crop-button" data-crop-trigger="{{ slot.position }}" {% if not slot.url %}disabled{% endif %}>Crop image</button>
+        <span class="help-text">JPEG, PNG or WebP · Max 5 MB</span>
+        {% if slot.field.errors %}<div class="field-error" role="alert">{{ slot.field.errors }}</div>{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="image-crop-dialog" data-crop-dialog hidden role="dialog" aria-modal="true" aria-labelledby="crop-dialog-title">
+    <div class="image-crop-panel">
+      <div class="image-crop-heading"><div><span class="eyebrow">IMAGE EDITOR</span><h2 id="crop-dialog-title">Crop product image</h2></div><button type="button" class="icon-button" data-crop-cancel aria-label="Close crop editor">×</button></div>
+      <p class="help-text">Drag the image to reposition it, then adjust the zoom. The saved image uses a 4:5 product ratio.</p>
+      <canvas data-crop-canvas width="480" height="600" aria-label="Image crop preview"></canvas>
+      <label class="crop-zoom">Zoom<input type="range" min="1" max="3" step="0.01" value="1" data-crop-zoom></label>
+      <div class="page-actions"><button type="button" class="button" data-crop-apply>Apply crop</button><button type="button" class="button button-outline" data-crop-cancel>Cancel</button></div>
+    </div>
+  </div>
+</section>

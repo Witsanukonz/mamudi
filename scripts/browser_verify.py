@@ -210,12 +210,20 @@ try:
     browser('select','#id_category',category.pk)
     browser('check','#id_sizes_1')
     browser('check','input[name="gender"][value="Unisex"]')
-    browser('upload','#id_image',str(product.image.path))
-    assert evaluate('document.querySelector("[data-image-preview]").src.startsWith("blob:")')
+    browser('select','#id_image_count','3')
+    for position in [1,2,3]:
+        browser('upload',f'#id_image_{position}',str(product.image.path))
+        assert evaluate('document.querySelector("[data-crop-dialog]").hidden') is False
+        browser('click','[data-crop-apply]')
+        browser('wait','500')
+        assert evaluate(f'document.querySelector("[data-image-preview=\\"{position}\\"]").src.startsWith("blob:")')
     screenshot('product-form-desktop.png')
     click('.form-panel form button')
     created_product=Product.objects.get(name='MAMUDI Browser Check '+marker)
     assert Path(created_product.image.path).exists()
+    assert created_product.image_count==3
+    navigate(created_product.get_absolute_url())
+    assert evaluate('document.querySelectorAll("[data-gallery-thumbnail]").length')==3
     navigate(f'/dashboard/products/{created_product.pk}/edit/')
     fill('#id_stock','9')
     click('.form-panel form button')
@@ -227,7 +235,7 @@ try:
     navigate(f'/dashboard/categories/{category.pk}/delete/')
     click('.button-danger')
     assert not Category.objects.filter(pk=category.pk).exists()
-    flow('Product create, image preview/upload, edit, delete; category delete')
+    flow('Product create with three cropped images, gallery, edit, delete; category delete')
 
     member=User.objects.get(username=member_name)
     navigate(f'/dashboard/users/{member.pk}/edit/')

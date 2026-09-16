@@ -136,7 +136,7 @@ def user_detail(request, pk):
 
 @admin_required
 def product_preview(request, pk):
-    product = get_object_or_404(Product, pk=pk)
+    product = get_object_or_404(Product.objects.prefetch_related('additional_images'), pk=pk)
     return render(request, 'dashboard/product_preview.html', {'product': product, 'title': product.name, 'kind': 'products'})
 
 

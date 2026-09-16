@@ -12,7 +12,7 @@ from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from catalog.models import Category, Product
+from catalog.models import Category, Product, ProductImage
 from orders.models import Order
 from orders.services import place_order, transition_order
 
@@ -55,7 +55,7 @@ class StoreTests(TestCase):
         return {'full_name':'Alice Test','phone':'0812345678','address':'123 Test Road','province':'Bangkok','postal_code':'10110'}
 
     def product_data(self,**kwargs):
-        return {'name':'MAMUDI New Tee','category':self.category.pk,'description':'A new essential','price':'999.50','stock':12,'sizes':['S','L'],'gender':'Unisex','color':'Beige','release_date':'2026-09-11','is_active':'on',**kwargs}
+        return {'name':'MAMUDI New Tee','category':self.category.pk,'description':'A new essential','price':'999.50','stock':12,'sizes':['S','L'],'gender':'Unisex','color':'Beige','image_count':1,'release_date':'2026-09-11','is_active':'on',**kwargs}
 
     def user_data(self,**kwargs):
         return {'username':'newuser','email':'new@example.com','first_name':'New','last_name':'Member','role':'customer','is_active':'on','password':'New-Strong-Password-928!','confirm_password':'New-Strong-Password-928!',**kwargs}
@@ -148,7 +148,7 @@ class StoreTests(TestCase):
         response=self.client.get('/dashboard/products/add/')
         for component in ['type="text"','type="radio"','<textarea','type="checkbox"','<select','type="date"','type="file"','data-image-preview']:
             self.assertContains(response,component)
-        response=self.client.post('/dashboard/products/add/',self.product_data(image=upload()))
+        response=self.client.post('/dashboard/products/add/',self.product_data(image_1=upload()))
         self.assertRedirects(response,'/dashboard/products/')
         product=Product.objects.get(name='MAMUDI New Tee')
         self.assertEqual(product.sizes,['S','L'])
@@ -157,7 +157,7 @@ class StoreTests(TestCase):
 
     def test_product_edit_stock_and_delete_post_only(self):
         self.login_admin()
-        self.assertRedirects(self.client.post(f'/dashboard/products/{self.product.pk}/edit/',self.product_data(stock=7)),'/dashboard/products/')
+        self.assertRedirects(self.client.post(f'/dashboard/products/{self.product.pk}/edit/',self.product_data(stock=7,image_1=upload())),'/dashboard/products/')
         self.product.refresh_from_db()
         self.assertEqual(self.product.stock,7)
         self.assertEqual(self.product.slug,'everyday-tee')
@@ -168,9 +168,39 @@ class StoreTests(TestCase):
 
     def test_product_validation(self):
         self.login_admin()
-        for data in [self.product_data(stock=-1),self.product_data(price=0),self.product_data(sizes=['BAD']),self.product_data(image=SimpleUploadedFile('fake.png',b'not an image',content_type='image/png'))]:
+        for data in [self.product_data(stock=-1,image_1=upload()),self.product_data(price=0,image_1=upload()),self.product_data(sizes=['BAD'],image_1=upload()),self.product_data(image_1=SimpleUploadedFile('fake.png',b'not an image',content_type='image/png'))]:
             response=self.client.post('/dashboard/products/add/',data)
             self.assertTrue(response.context['form'].errors)
+        self.assertFalse(Product.objects.filter(name='MAMUDI New Tee').exists())
+
+    def test_product_gallery_saves_three_images_and_can_reduce_count(self):
+        self.login_admin()
+        response=self.client.post('/dashboard/products/add/',self.product_data(
+            image_count=3,
+            image_1=upload('front.png'),
+            image_2=upload('back.png'),
+            image_3=upload('detail.png'),
+        ))
+        self.assertRedirects(response,'/dashboard/products/')
+        product=Product.objects.get(name='MAMUDI New Tee')
+        self.assertEqual(list(product.additional_images.values_list('position',flat=True)),[2,3])
+        self.assertEqual(product.image_count,3)
+        detail=self.client.get(product.get_absolute_url())
+        self.assertEqual(detail.status_code,200)
+        self.assertContains(detail,'data-gallery-thumbnail',count=3)
+
+        response=self.client.post(f'/dashboard/products/{product.pk}/edit/',self.product_data(image_count=1))
+        self.assertRedirects(response,'/dashboard/products/')
+        product.refresh_from_db()
+        self.assertTrue(product.image)
+        self.assertEqual(product.image_count,1)
+        self.assertFalse(ProductImage.objects.filter(product=product).exists())
+
+    def test_product_gallery_requires_every_selected_image_on_create(self):
+        self.login_admin()
+        response=self.client.post('/dashboard/products/add/',self.product_data(image_count=2,image_1=upload('front.png')))
+        self.assertEqual(response.status_code,200)
+        self.assertIn('image_2',response.context['form'].errors)
         self.assertFalse(Product.objects.filter(name='MAMUDI New Tee').exists())
 
     def test_category_crud_and_protected_delete(self):
