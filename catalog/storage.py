@@ -27,4 +27,3 @@ class VercelBlobStorage(Storage):
 
     def url(self, name):
         return name
-
