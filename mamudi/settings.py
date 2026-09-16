@@ -5,11 +5,17 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-local-mamudi-demo-only')
+IS_VERCEL = bool(os.getenv('VERCEL'))
+DEBUG = os.getenv('DEBUG', 'False' if IS_VERCEL else 'True').lower() == 'true'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY', 'django-insecure-local-mamudi-demo-only')
 if not DEBUG and SECRET_KEY == 'django-insecure-local-mamudi-demo-only':
-    raise RuntimeError('Set SECRET_KEY before disabling DEBUG.')
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    raise RuntimeError('Set DJANGO_SECRET_KEY or SECRET_KEY before disabling DEBUG.')
+default_hosts = 'localhost,127.0.0.1,.vercel.app' if IS_VERCEL else 'localhost,127.0.0.1'
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', default_hosts).split(',') if host.strip()]
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.vercel.app' if IS_VERCEL else '',
+).split(',') if origin.strip()]
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
     'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
@@ -28,7 +34,11 @@ TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'DIR
                   'django.contrib.messages.context_processors.messages', 'catalog.context_processors.store_context',
               ]}}]
 WSGI_APPLICATION = 'mamudi.wsgi.application'
-DATABASES = {'default': dj_database_url.config(default=f'sqlite:///{BASE_DIR / "db.sqlite3"}', conn_max_age=0)}
+DATABASES = {'default': dj_database_url.config(
+    default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+    conn_max_age=0,
+    conn_health_checks=True,
+)}
 AUTH_USER_MODEL = 'accounts.User'
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -45,6 +55,11 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+if os.getenv('BLOB_READ_WRITE_TOKEN'):
+    STORAGES = {
+        'default': {'BACKEND': 'catalog.storage.VercelBlobStorage'},
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    }
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
@@ -61,6 +76,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 6 * 1024 * 1024
 SESSION_COOKIE_HTTPONLY = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-

@@ -54,9 +54,11 @@ class Command(BaseCommand):
         for index,(name,category,price,color,sizes,stock,gender) in enumerate(PRODUCTS,1):
             slug=slugify(f'MAMUDI {name}')
             filename=f'products/{slug}.jpg'
-            path=Path(settings.MEDIA_ROOT)/filename
-            if not path.exists():
-                product_image(path,category,color,index)
+            # Keep demo artwork in media for local Django and in static for
+            # immutable/serverless deployments such as Vercel.
+            for path in (Path(settings.MEDIA_ROOT)/filename, settings.BASE_DIR/'static/images'/filename):
+                if not path.exists():
+                    product_image(path,category,color,index)
             product,created=Product.objects.get_or_create(slug=slug,defaults={
                 'name':f'MAMUDI {name}','category':categories[category],'price':price,'color':color,'sizes':sizes.split(),
                 'stock':stock,'gender':gender,'description':DESCRIPTIONS[category], 'image':filename,

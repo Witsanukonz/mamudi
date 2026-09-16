@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 
@@ -35,7 +36,7 @@ class Product(models.Model):
     gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.UNISEX)
     sizes = models.JSONField(default=list, blank=True)
     color = models.CharField(max_length=60)
-    image = models.ImageField(upload_to='products/', blank=True)
+    image = models.ImageField(upload_to='products/', blank=True, max_length=500)
     release_date = models.DateField(default=timezone.localdate)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,7 +54,12 @@ class Product(models.Model):
 
     @property
     def image_url(self):
-        return self.image.url if self.image else '/static/images/product-placeholder.svg'
+        if not self.image:
+            return static('images/product-placeholder.svg')
+        name = str(self.image.name).replace('\\', '/')
+        if name.startswith('products/mamudi-'):
+            return static(f'images/{name}')
+        return self.image.url
 
     @property
     def short_name(self):
@@ -62,4 +68,3 @@ class Product(models.Model):
     @property
     def default_size(self):
         return self.sizes[0] if self.sizes else 'One size'
-

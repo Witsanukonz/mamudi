@@ -10,8 +10,12 @@ __pycache__/
 media/
 staticfiles/
 node_modules/
+.vercel/
+.agents/
+skills-lock.json
 artifacts/
 DEMO_ACCESS.md
+VERCEL_ACCESS.md
 server-*.log
 .DS_Store
 Thumbs.db

@@ -1,0 +1,12 @@
+.venv/
+.env
+.env.*
+!.env.example
+.vercel/
+*.sqlite3
+media/
+node_modules/
+artifacts/
+DEMO_ACCESS.md
+server-*.log
+tests/
