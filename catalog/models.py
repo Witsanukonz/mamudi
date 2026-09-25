@@ -57,6 +57,8 @@ class Product(models.Model):
         if not self.image:
             return static('images/product-placeholder.svg')
         name = str(self.image.name).replace('\\', '/')
+        if name.startswith(('http://', 'https://')):
+            return name
         if name.startswith('products/mamudi-'):
             return static(f'images/{name}')
         return self.image.url
@@ -66,7 +68,7 @@ class Product(models.Model):
         urls = [self.image_url]
         for product_image in self.additional_images.all():
             if product_image.image:
-                urls.append(product_image.image.url)
+                urls.append(product_image.image_url)
         return urls
 
     @property
@@ -96,3 +98,10 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f'{self.product.name} image {self.position}'
+
+    @property
+    def image_url(self):
+        name = str(self.image.name).replace('\\', '/')
+        if name.startswith(('http://', 'https://')):
+            return name
+        return self.image.url

@@ -203,6 +203,15 @@ class StoreTests(TestCase):
         self.assertIn('image_2',response.context['form'].errors)
         self.assertFalse(Product.objects.filter(name='MAMUDI New Tee').exists())
 
+    def test_product_gallery_uses_absolute_blob_urls_on_local_storage(self):
+        blob_url='https://example.public.blob.vercel-storage.com/product-front.jpg'
+        detail_url='https://example.public.blob.vercel-storage.com/product-detail.jpg'
+        self.product.image=blob_url
+        self.product.save(update_fields=['image'])
+        ProductImage.objects.create(product=self.product,position=2,image=detail_url)
+        self.assertEqual(self.product.image_url,blob_url)
+        self.assertEqual(self.product.gallery_image_urls,[blob_url,detail_url])
+
     def test_category_crud_and_protected_delete(self):
         self.login_admin()
         self.assertRedirects(self.client.post('/dashboard/categories/add/',{'name':'New category','description':'New'}),'/dashboard/categories/')
