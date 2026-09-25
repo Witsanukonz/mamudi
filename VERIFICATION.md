@@ -1,13 +1,13 @@
 # MAMUDI verification
 
-Verified locally on 11 September 2026 with Python 3.14, Django 5.2.17, SQLite and headless Google Chrome.
+Verified locally through 25 September 2026 with Python 3.14, Django 5.2.17, SQLite and headless Google Chrome.
 
 | Check | Result |
 | --- | --- |
 | Initial migrations | Applied successfully |
 | `python manage.py check` | No issues |
 | `python manage.py makemigrations --check --dry-run` | No changes detected |
-| `python manage.py test` | 38 tests passed, including clone setup tests |
+| `python manage.py test` | 42 tests passed, including clone setup tests |
 | `npm run build:css` | Tailwind compiled successfully |
 | Repeated `seed_demo` | No duplicates, existing stock preserved |
 | Browser page/viewport checks | 64 passed at 375, 390, 768 and 1280 px |
@@ -51,15 +51,15 @@ Product visuals are original generated placeholders, not product photography. Pa
 
 ## Repository setup verification
 
-The committed source was cloned into a separate directory with no virtual environment, local settings, database or product media. On Windows / Python 3.14:
+The committed source was cloned into a separate directory with no virtual environment, local settings, machine-local database or product media. On Windows / Python 3.14:
 
 - `python setup_demo.py` created its own `.venv` and installed the pinned dependencies.
-- Migrations, 20 product images, 20 products, 8 categories and 2 usable accounts were created successfully.
-- Fresh Admin and Customer passwords were checked against Django's password hashes. The Admin could open the custom Dashboard.
+- Migrations, product images, products, categories and usable demo accounts were prepared successfully from the tracked demo database.
+- Fresh Admin and Customer passwords from `DEMO_ACCESS.md` were checked against Django's password hashes. The Admin could open the custom Dashboard.
 - Home, Shop, Product Detail and Cart rendered successfully in that clone.
 - Running `python setup_demo.py` again preserved the exact `.env`, account access file, password hashes and record counts.
-- All 38 tests passed in the clone; no model migration changes remained.
-- The clone's Git worktree stayed clean after setup. Local credentials, database, generated media and virtual environment remained ignored.
+- All 42 tests passed; no model migration changes remained.
+- The tracked SQLite snapshot was copied to ignored `local.sqlite3`; the clone's tracked files stayed unchanged after setup. Local credentials, generated media, virtual environment and setup marker remained ignored.
 - The 97 tracked files were checked against the original machine's actual secret key and account passwords; none were included.
 
-The browser screenshots and cancelled order described above belong to the original local verification session. A fresh clone starts with zero orders; reports under `artifacts/` and machine-local credentials are not published.
+The browser screenshots and cancelled order described above belong to the original local verification session. The tracked SQLite demo snapshot may include sample orders; reports under `artifacts/` and machine-local credentials are not published.

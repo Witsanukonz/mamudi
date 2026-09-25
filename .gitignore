@@ -16,6 +16,7 @@ node_modules/
 skills-lock.json
 artifacts/
 DEMO_ACCESS.md
+.demo_setup_complete
 VERCEL_ACCESS.md
 server-*.log
 .DS_Store

@@ -47,6 +47,13 @@ DESCRIPTIONS={
 class Command(BaseCommand):
     help='Create 8 categories, 20 illustrated products and a demo customer without overwriting existing records.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--reset-customer-password',
+            action='store_true',
+            help='Set the demo customer password from DEMO_CUSTOMER_PASSWORD.',
+        )
+
     @transaction.atomic
     def handle(self,*args,**options):
         categories={name:Category.objects.get_or_create(slug=slugify(name), defaults={'name':name,'description':f'MAMUDI {name}. Essentials for everyday life.'})[0] for name in DESCRIPTIONS}
@@ -72,13 +79,15 @@ class Command(BaseCommand):
         if not path.exists():
             hero_image(path)
         customer,created=User.objects.get_or_create(username='customer', defaults={'email':'customer@mamudi.example','first_name':'Demo','last_name':'Customer','phone':'0812345678','address':'123 Demo Road','province':'Bangkok','postal_code':'10110'})
-        if created:
+        reset_password = options['reset_customer_password']
+        if created or reset_password:
             password=os.getenv('DEMO_CUSTOMER_PASSWORD')
             if password:
                 customer.set_password(password)
-            else:
+            elif created:
                 customer.set_unusable_password()
-            customer.save()
+            if created or password:
+                customer.save()
         self.stdout.write(self.style.SUCCESS(f'Seed complete: {Category.objects.count()} categories, {Product.objects.count()} products ({created_count} added). Existing stock and accounts preserved.'))
         if created and not os.getenv('DEMO_CUSTOMER_PASSWORD'):
             self.stdout.write('Set customer password with: python manage.py changepassword customer')

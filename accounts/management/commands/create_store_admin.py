@@ -11,6 +11,11 @@ class Command(BaseCommand):
 
     def add_arguments(self,parser):
         parser.add_argument('--noinput',action='store_true')
+        parser.add_argument(
+            '--reset-password',
+            action='store_true',
+            help='Set the password of an existing admin from ADMIN_PASSWORD.',
+        )
 
     def handle(self,*args,**options):
         username=os.getenv('ADMIN_USERNAME','')
@@ -29,6 +34,15 @@ class Command(BaseCommand):
             existing=User.objects.get(username=username)
             if not existing.is_store_admin:
                 raise CommandError('That username already exists and is not an active admin. No changes made.')
+            if options['reset_password']:
+                try:
+                    password_validation.validate_password(password,existing)
+                except ValidationError as exc:
+                    raise CommandError('; '.join(exc.messages)) from exc
+                existing.set_password(password)
+                existing.save(update_fields=['password'])
+                self.stdout.write(self.style.SUCCESS(f'Updated the password for Dashboard admin "{username}".'))
+                return
             self.stdout.write('Admin already exists. Password and account unchanged.')
             return
         user=User(username=username,email=email.strip().lower(),role=User.Role.ADMIN,first_name='Store')
